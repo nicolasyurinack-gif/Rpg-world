@@ -1,0 +1,159 @@
+<!DOCTYPE html><html lang="pt-BR">  <head>  
+<meta charset="UTF-8">  
+<title>Vaelthar Offline</title><style>  
+body { margin:0; background:#0e0e0e; color:#fff; font-family:serif; }  
+#map { display:flex; justify-content:space-around; height:35vh; background:#2a2a2a; align-items:center; }  
+.island { padding:10px; border:2px solid #aaa; cursor:pointer; background:#3a3a3a; }  
+#content { display:flex; }  
+#sidebar { width:250px; background:#1a1a1a; padding:10px; overflow:auto; }  
+#main { flex:1; padding:10px; }  
+.chat { height:300px; overflow:auto; background:black; padding:5px; }  
+input { width:100%; padding:5px; }  
+button { width:100%; margin:3px 0; }  
+</style></head><body><div id="map">  
+<div class="island" onclick="selectIsland('Noroia')">Noroia</div>  
+<div class="island" onclick="selectIsland('Oroiamata')">Oroiamata</div>  
+<div class="island" onclick="selectIsland('KuriKuligan')">KuriKuligan</div>  
+<div class="island" onclick="selectIsland('Informonos')">Informonos</div>  
+<div class="island" onclick="selectIsland('Cronomanaca')">Cronomanaca</div>  
+</div><div id="content">  
+<div id="sidebar"><h3>Jogadores</h3>  
+<div id="players"></div>  
+<button onclick="createCharacter()">Criar ficha</button><h3>NPCs</h3>  
+<div id="npcList"></div></div><div id="main">  
+<h2 id="loc">Escolha uma ilha</h2>  
+<div class="chat" id="chat"></div>  
+<input id="msg" placeholder="Fale..." onkeydown="if(event.key==='Enter') send()">  
+</div>  
+</div><script>  let island=null;
+let npc=null;
+let currentPlayer=null;
+let lastMessage="";
+
+const races=["Humano","Elfo","Meio-demônio","Espírito","Anão","Demônio","Geleia","Golem","Humanimal"];
+
+function random(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function makeNPC(name,role){
+return {name,role,race:random(races)};
+}
+
+function genNPCs(name){
+let list=[];
+list.push(makeNPC(Rei de ${name},"Realeza"));
+list.push(makeNPC(Rainha de ${name},"Realeza"));
+list.push(makeNPC(Ferreiro de ${name},"Ferreiro"));
+for(let i=1;i<=3;i++) list.push(makeNPC(Comerciante ${i},"Comércio"));
+for(let i=1;i<=5;i++) list.push(makeNPC(Gangue ${i},"Gangue"));
+return list;
+}
+
+const world={
+Noroia: genNPCs("Noroia"),
+Oroiamata: genNPCs("Oroiamata"),
+KuriKuligan: genNPCs("KuriKuligan"),
+Informonos: genNPCs("Informonos"),
+Cronomanaca: genNPCs("Cronomanaca")
+};
+
+/* ===== SISTEMA DE JOGADORES (MAX 3) ===== */
+
+let players=JSON.parse(localStorage.getItem("players")||"[]");
+
+function updatePlayers(){
+let div=document.getElementById("players");
+div.innerHTML="";
+players.forEach((p,i)=>{
+let b=document.createElement("button");
+b.innerText=p.name;
+b.onclick=()=> currentPlayer=i;
+div.appendChild(b);
+});
+}
+
+function createCharacter(){
+if(players.length>=3){
+alert("Limite de 3 jogadores atingido!");
+return;
+}
+
+let name=prompt("Nome:");
+let lore=prompt("História:");
+
+players.push({name,lore});
+localStorage.setItem("players",JSON.stringify(players));
+updatePlayers();
+}
+
+/* ===== MAPA ===== */
+
+function selectIsland(i){
+island=i;
+document.getElementById("loc").innerText=i;
+
+let div=document.getElementById("npcList");
+div.innerHTML="";
+
+world[i].forEach(n=>{
+let b=document.createElement("button");
+b.innerText=${n.name} (${n.race});
+b.onclick=()=> npc=n;
+div.appendChild(b);
+});
+}
+
+/* ===== CHAT ===== */
+
+function send(){
+let input=document.getElementById("msg");
+
+if(!input.value || !npc || currentPlayer===null){
+alert("Escolha jogador, NPC e escreva algo!");
+return;
+}
+
+let player=players[currentPlayer];
+
+add(${player.name}: ${input.value});
+
+let reply=fakeAI(input.value,npc,island,player);
+
+add(${npc.name}: ${reply});
+
+lastMessage=input.value;
+input.value="";
+}
+
+function add(t){
+let c=document.getElementById("chat");
+c.innerHTML+=<p>${t}</p>;
+c.scrollTop=c.scrollHeight;
+}
+
+/* ===== IA FALSA AVANÇADA ===== */
+
+function fakeAI(msg,npc,island,player){
+
+let r=npc.race;
+
+if(r==="Espírito") return "As palavras ecoam... '"+msg+"'... mas o sentido está além.";
+if(r==="Anão") return "Se não tem mel, fala rápido.";
+if(r==="Demônio") return "Tudo tem preço... até suas palavras.";
+if(r==="Geleia") return "blop (uma bolha mostra algo estranho)";
+if(r==="Golem") return "... (silêncio pesado)";
+if(r==="Humanimal") return "HAHA! "+msg+"?! explica melhor!";
+if(r==="Elfo") return "A vida flui... talvez eu possa ajudar.";
+if(r==="Humano") return "Isso é interessante... me diga mais.";
+if(r==="Meio-demônio") return "Isso... mexe com algo dentro de mim.";
+
+if(island==="Informonos") return "Nem tudo aqui deveria responder...";
+if(island==="Cronomanaca") return "Isso já aconteceu antes...";
+
+return "Hmm...";
+}
+
+updatePlayers();
+
+</script></body>
+
+</html>  De onde era isso ent melhor, me mostre TD que tem aqui, td
